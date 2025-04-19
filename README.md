@@ -31,7 +31,17 @@ chmod +x run_local.sh
 
 ## 🔁 API Usage
 
-### POST `/translate`
+To check if CUDA is available run
+
+```shell
+source venv/bin/activate
+python -c "import torch; print(torch.cuda.is_available())"
+```
+_For powershell use `.\win-venv\Scripts\Activate.ps1`_
+
+### POST `/translate-<cpu|gpu>`
+
+
 
 Translate text between German and English.
 
@@ -45,7 +55,7 @@ Translate text between German and English.
 1.German to English
 
 ```shell
-curl -X POST http://localhost:8080/translate \
+curl -X POST http://localhost:8081/translate-cpu \
       -H "Content-Type: application/json" \
       -d '{"text": "Guten Morgen", "direction": "de-en"}'
 ```
@@ -53,7 +63,7 @@ curl -X POST http://localhost:8080/translate \
 - 2.English to German
 
 ```shell
-curl -X POST http://localhost:8080/translate \
+curl -X POST http://localhost:8080/translate-cpu \
       -H "Content-Type: application/json" \
       -d '{"text": "Hi my friend", "direction": "en-de"}'
 ```
@@ -65,7 +75,6 @@ curl -X POST http://localhost:8080/translate \
   "translation": "Good morning"
 }
 ```
-
 ---
 
 ## 🧩 Models Used
