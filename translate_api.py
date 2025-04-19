@@ -10,7 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 import syntok.segmenter as segmenter  # Use syntok's correct segmenter module
 
 # Configure logging
-logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
@@ -71,6 +71,7 @@ def split_into_sentences(text: str):
 def translate_sentences(sentences, tokenizer, model, device):
     translations = []
     for sentence in sentences:
+        logger.info(f"Processing sentence: {sentence}")
         inputs = tokenizer(sentence, return_tensors="pt", padding=True, truncation=True).to(device)
         outputs = model.generate(**inputs)
         decoded = tokenizer.decode(outputs[0], skip_special_tokens=True)
@@ -80,8 +81,12 @@ def translate_sentences(sentences, tokenizer, model, device):
 # Translate text in parallel by sentence for large input support
 def parallel_translate(text, tokenizer, model, device):
     sentences = split_into_sentences(text)
+    logger.info(f"Will process {len(sentences)} sentence(s) in parallel.")
     with ThreadPoolExecutor() as executor:
-        futures = [executor.submit(translate_sentences, [s], tokenizer, model, device) for s in sentences]
+        futures = []
+        for i, sentence in enumerate(sentences):
+            logger.info(f"Submitting translation task {i+1}/{len(sentences)}")
+            futures.append(executor.submit(translate_sentences, [sentence], tokenizer, model, device))
         results = [future.result()[0] for future in futures]
     return " ".join(results)
 
