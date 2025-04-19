@@ -2,12 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Translator</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
-
     <style>
         body {
           font-family: 'Roboto', sans-serif;
@@ -60,6 +59,7 @@
         .card-panel {
           border-radius: 12px;
           padding: 24px;
+          position: relative;
         }
 
         .input-box, .output-box {
@@ -70,7 +70,6 @@
           white-space: pre-wrap;
           word-wrap: break-word;
           resize: none;
-          position: relative;
           box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
           border-top: 3px solid #2196f3;
         }
@@ -81,15 +80,13 @@
         }
 
         .output-box {
-          pointer-events: none;
-          user-select: none;
+          overflow-y: auto;
+          user-select: text;
+          cursor: default;
         }
 
         .box-footer {
-          position: absolute;
-          bottom: 8px;
-          left: 12px;
-          right: 12px;
+          margin-top: 6px;
           display: flex;
           justify-content: space-between;
           font-size: 0.85rem;
@@ -139,26 +136,86 @@
           align-items: center;
           gap: 10px;
         }
+
+        #toast-container {
+          top: auto !important;
+          bottom: 40px;
+          right: 50%;
+          transform: translateX(50%);
+          left: auto !important;
+        }
+
+        /* Overlay */
+        .overlay {
+          display: none;
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(255, 255, 255, 0.7);
+          z-index: 10;
+          justify-content: center;
+          align-items: center;
+          flex-direction: column;
+        }
+
+        .dark-theme .overlay {
+          background-color: rgba(30, 30, 47, 0.7);
+        }
+
+        .spinner-text {
+          margin-top: 16px;
+          font-size: 1.2rem;
+          color: #555;
+        }
+
+        .dark-theme .spinner-text {
+          color: #ccc;
+        }
     </style>
 </head>
 <body class="light-theme">
 <div class="container">
-    <div class="card-panel">
+    <div class="card-panel" id="mainPanel">
+        <!-- Overlay -->
+        <div class="overlay" id="overlay">
+            <div class="preloader-wrapper big active">
+                <div class="spinner-layer spinner-blue-only">
+                    <div class="circle-clipper left"><div class="circle"></div></div>
+                    <div class="gap-patch"><div class="circle"></div></div>
+                    <div class="circle-clipper right"><div class="circle"></div></div>
+                </div>
+            </div>
+            <div class="spinner-text">Processing...</div>
+        </div>
+
+        <!-- Header -->
         <div class="row" style="display: flex; align-items: center; justify-content: space-between;">
             <h4 style="margin: 0;">Translator</h4>
-            <div class="switch theme-toggle">
-                <label style="color: inherit;">
-                    Light
-                    <input type="checkbox" id="themeToggle">
-                    <span class="lever"></span>
-                    Dark
-                </label>
+            <div style="display: flex; gap: 24px;">
+                <div class="switch theme-toggle">
+                    <label style="color: inherit;">
+                        Light
+                        <input type="checkbox" id="themeToggle">
+                        <span class="lever"></span>
+                        Dark
+                    </label>
+                </div>
+                <div class="switch">
+                    <label style="color: inherit;">
+                        CPU
+                        <input type="checkbox" id="gpuToggle">
+                        <span class="lever"></span>
+                        GPU
+                    </label>
+                </div>
             </div>
         </div>
 
+        <!-- Input / Output Boxes -->
         <div class="row">
-            <!-- LEFT: Input -->
-            <div class="col s12 m6" style="position: relative;">
+            <div class="col s12 m6">
                 <div class="label" id="left-label">
                     <img class="flag" id="left-flag" src="https://flagcdn.com/de.svg" />
                     German
@@ -170,8 +227,7 @@
                 </div>
             </div>
 
-            <!-- RIGHT: Output -->
-            <div class="col s12 m6" style="position: relative;">
+            <div class="col s12 m6">
                 <div class="label" id="right-label">
                     <img class="flag" id="right-flag" src="https://flagcdn.com/us.svg" />
                     English
@@ -184,12 +240,12 @@
             </div>
         </div>
 
+        <!-- Controls -->
         <div class="action-buttons">
             <button class="btn grey darken-3" id="btn-switch">SWITCH</button>
             <button class="btn blue darken-2" id="btn-translate">TRANSLATE</button>
         </div>
 
-        <!-- STATS OUTSIDE PANELS -->
         <div id="responseStats"></div>
     </div>
 </div>
@@ -218,27 +274,39 @@
       return text.trim().split(/\s+/).filter(word => word.length > 0).length;
     }
 
+    function toggleProcessing(state) {
+      $('#overlay').css('display', state ? 'flex' : 'none');
+      $('#btn-translate, #btn-switch, #gpuToggle, #themeToggle').prop('disabled', state);
+      $('#inputText').attr('contenteditable', !state);
+    }
+
     function translate() {
       const text = $('#inputText').text().trim();
       const payload = JSON.stringify({ text, direction });
       const startTime = performance.now();
+      const useGPU = $('#gpuToggle').is(':checked');
+      const endpoint = useGPU ? '/translate-gpu' : '/translate-cpu';
+
+      toggleProcessing(true);
 
       $.ajax({
-        url: 'http://localhost:8080/translate',
+        url: endpoint,
         method: 'POST',
         contentType: 'application/json',
         data: payload,
         success: function(response, status, xhr) {
+          toggleProcessing(false);
+
           const endTime = performance.now();
           const time = (endTime - startTime).toFixed(1);
           const bytesSent = formatBytes(payload.length);
           const bytesReceived = formatBytes(xhr.responseText.length);
           const words = countWords(text);
+          const now = new Date().toLocaleString();
 
           $('#outputText').text(response.translation || 'No result');
           updateOutputCharCount();
 
-          // Highlighted time style
           let timeStyle = `${time} ms`;
           if (time >= 1000) {
             timeStyle = `<mark style="background-color:#ffb3b3;">${time} ms</mark>`;
@@ -248,14 +316,24 @@
             timeStyle = `<span style="color:green;">${time} ms</span>`;
           }
 
-          $('#responseStats').html(`Response Time: ${timeStyle} • Words: ${words} • Sent: ${bytesSent} • Received: ${bytesReceived}`);
+          $('#responseStats').html(`🕒 ${now} • Response Time: ${timeStyle} • Words: ${words} • Sent: ${bytesSent} • Received: ${bytesReceived}`);
         },
         error: function(xhr) {
+          toggleProcessing(false);
+
+          let message = `Translation failed (${xhr.status})`;
+          if (xhr.responseJSON && xhr.responseJSON.detail) {
+            message += `<br><small>${xhr.responseJSON.detail}</small>`;
+          } else if (xhr.responseText) {
+            message += `<br><small>${xhr.responseText}</small>`;
+          }
+
           M.toast({
-            html: `Translation failed (${xhr.status})`,
+            html: message,
             displayLength: 10000,
             classes: 'red darken-2'
           });
+
           $('#responseStats').text('');
           $('#outputText').text('');
           updateOutputCharCount();
@@ -302,19 +380,13 @@
     $('#copyOutput').on('click', () => copyTextFrom('outputText'));
 
     $('#themeToggle').on('change', function () {
-      if (this.checked) {
-        document.body.classList.remove('light-theme');
-        document.body.classList.add('dark-theme');
-      } else {
-        document.body.classList.remove('dark-theme');
-        document.body.classList.add('light-theme');
-      }
+      document.body.classList.toggle('dark-theme', this.checked);
+      document.body.classList.toggle('light-theme', !this.checked);
     });
 
     updateLabels();
     updateInputCharCount();
     updateOutputCharCount();
 </script>
-
 </body>
 </html>
