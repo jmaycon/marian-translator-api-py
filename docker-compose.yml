@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  translator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: marian-translator-api
+    ports:
+      - "8080:8080"
+    restart: unless-stopped

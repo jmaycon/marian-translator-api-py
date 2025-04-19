@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Translator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+
+    <style>
+        body {
+          font-family: 'Roboto', sans-serif;
+          margin: 0;
+        }
+
+        .dark-theme {
+          background-color: #1e1e2f;
+          color: #e0e0e0;
+        }
+
+        .dark-theme .card-panel {
+          background-color: #2a2a3d;
+        }
+
+        .dark-theme .input-box {
+          background: #ffffff;
+          color: #000;
+        }
+
+        .dark-theme .output-box {
+          background: #444;
+          color: #ccc;
+        }
+
+        .light-theme {
+          background-color: #fafafa;
+          color: #212121;
+        }
+
+        .light-theme .card-panel {
+          background-color: #ffffff;
+        }
+
+        .light-theme .input-box {
+          background: #ffffff;
+          color: #000;
+        }
+
+        .light-theme .output-box {
+          background: #f2f2f2;
+          color: #333;
+        }
+
+        .container {
+          max-width: 1100px;
+          margin-top: 40px;
+        }
+
+        .card-panel {
+          border-radius: 12px;
+          padding: 24px;
+        }
+
+        .input-box, .output-box {
+          border-radius: 12px;
+          padding: 1rem;
+          height: 300px;
+          overflow-y: auto;
+          white-space: pre-wrap;
+          word-wrap: break-word;
+          resize: none;
+          position: relative;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+          border-top: 3px solid #2196f3;
+        }
+
+        .input-box {
+          cursor: text;
+          user-select: text;
+        }
+
+        .output-box {
+          pointer-events: none;
+          user-select: none;
+        }
+
+        .box-footer {
+          position: absolute;
+          bottom: 8px;
+          left: 12px;
+          right: 12px;
+          display: flex;
+          justify-content: space-between;
+          font-size: 0.85rem;
+          color: #666;
+        }
+
+        .label {
+          font-weight: 500;
+          font-size: 1.1rem;
+          margin-bottom: 8px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .flag {
+          height: 20px;
+        }
+
+        .material-icons.copy-icon {
+          cursor: pointer;
+          font-size: 20px;
+          color: #666;
+          background: #fff;
+          padding: 4px;
+          border-radius: 6px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .action-buttons {
+          margin-top: 24px;
+          display: flex;
+          justify-content: center;
+          gap: 24px;
+        }
+
+        #responseStats {
+          font-size: 0.9rem;
+          margin-top: 24px;
+          color: inherit;
+          text-align: center;
+          font-style: italic;
+        }
+
+        .theme-toggle {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+    </style>
+</head>
+<body class="light-theme">
+<div class="container">
+    <div class="card-panel">
+        <div class="row" style="display: flex; align-items: center; justify-content: space-between;">
+            <h4 style="margin: 0;">Translator</h4>
+            <div class="switch theme-toggle">
+                <label style="color: inherit;">
+                    Light
+                    <input type="checkbox" id="themeToggle">
+                    <span class="lever"></span>
+                    Dark
+                </label>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- LEFT: Input -->
+            <div class="col s12 m6" style="position: relative;">
+                <div class="label" id="left-label">
+                    <img class="flag" id="left-flag" src="https://flagcdn.com/de.svg" />
+                    German
+                </div>
+                <div id="inputText" class="input-box" contenteditable="true"></div>
+                <div class="box-footer">
+                    <span id="inputCharCount">0 characters</span>
+                    <i class="material-icons copy-icon" id="copyInput" title="Copy">content_copy</i>
+                </div>
+            </div>
+
+            <!-- RIGHT: Output -->
+            <div class="col s12 m6" style="position: relative;">
+                <div class="label" id="right-label">
+                    <img class="flag" id="right-flag" src="https://flagcdn.com/us.svg" />
+                    English
+                </div>
+                <div id="outputText" class="output-box"></div>
+                <div class="box-footer">
+                    <span id="outputCharCount">0 characters</span>
+                    <i class="material-icons copy-icon" id="copyOutput" title="Copy">content_copy</i>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn grey darken-3" id="btn-switch">SWITCH</button>
+            <button class="btn blue darken-2" id="btn-translate">TRANSLATE</button>
+        </div>
+
+        <!-- STATS OUTSIDE PANELS -->
+        <div id="responseStats"></div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script>
+    let direction = 'de-en';
+
+    function updateLabels() {
+      if (direction === 'en-de') {
+        $('#left-label').html('<img class="flag" src="https://flagcdn.com/us.svg"> English');
+        $('#right-label').html('<img class="flag" src="https://flagcdn.com/de.svg"> German');
+      } else {
+        $('#left-label').html('<img class="flag" src="https://flagcdn.com/de.svg"> German');
+        $('#right-label').html('<img class="flag" src="https://flagcdn.com/us.svg"> English');
+      }
+    }
+
+    function formatBytes(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      return (bytes / 1024).toFixed(1) + ' KB';
+    }
+
+    function countWords(text) {
+      return text.trim().split(/\s+/).filter(word => word.length > 0).length;
+    }
+
+    function translate() {
+      const text = $('#inputText').text().trim();
+      const payload = JSON.stringify({ text, direction });
+      const startTime = performance.now();
+
+      $.ajax({
+        url: 'http://localhost:8080/translate',
+        method: 'POST',
+        contentType: 'application/json',
+        data: payload,
+        success: function(response, status, xhr) {
+          const endTime = performance.now();
+          const time = (endTime - startTime).toFixed(1);
+          const bytesSent = formatBytes(payload.length);
+          const bytesReceived = formatBytes(xhr.responseText.length);
+          const words = countWords(text);
+
+          $('#outputText').text(response.translation || 'No result');
+          updateOutputCharCount();
+
+          // Highlighted time style
+          let timeStyle = `${time} ms`;
+          if (time >= 1000) {
+            timeStyle = `<mark style="background-color:#ffb3b3;">${time} ms</mark>`;
+          } else if (time >= 500) {
+            timeStyle = `<mark style="background-color: #fff59d;">${time} ms</mark>`;
+          } else {
+            timeStyle = `<span style="color:green;">${time} ms</span>`;
+          }
+
+          $('#responseStats').html(`Response Time: ${timeStyle} • Words: ${words} • Sent: ${bytesSent} • Received: ${bytesReceived}`);
+        },
+        error: function(xhr) {
+          M.toast({
+            html: `Translation failed (${xhr.status})`,
+            displayLength: 10000,
+            classes: 'red darken-2'
+          });
+          $('#responseStats').text('');
+          $('#outputText').text('');
+          updateOutputCharCount();
+        }
+      });
+    }
+
+    $('#btn-translate').on('click', translate);
+
+    $('#btn-switch').on('click', () => {
+      direction = direction === 'en-de' ? 'de-en' : 'en-de';
+      const input = $('#inputText').text();
+      const output = $('#outputText').text();
+      $('#inputText').text(output);
+      $('#outputText').text(input);
+      updateLabels();
+      updateInputCharCount();
+      updateOutputCharCount();
+    });
+
+    const updateInputCharCount = () => {
+      const text = $('#inputText').text().trim();
+      $('#inputCharCount').text(`${text.length} characters`);
+    };
+
+    const updateOutputCharCount = () => {
+      const text = $('#outputText').text().trim();
+      $('#outputCharCount').text(`${text.length} characters`);
+    };
+
+    $('#inputText').on('input', updateInputCharCount);
+
+    async function copyTextFrom(elementId) {
+      try {
+        const text = document.getElementById(elementId).innerText;
+        await navigator.clipboard.writeText(text);
+        M.toast({ html: 'Copied!', displayLength: 3000 });
+      } catch (err) {
+        M.toast({ html: 'Copy failed', displayLength: 3000 });
+      }
+    }
+
+    $('#copyInput').on('click', () => copyTextFrom('inputText'));
+    $('#copyOutput').on('click', () => copyTextFrom('outputText'));
+
+    $('#themeToggle').on('change', function () {
+      if (this.checked) {
+        document.body.classList.remove('light-theme');
+        document.body.classList.add('dark-theme');
+      } else {
+        document.body.classList.remove('dark-theme');
+        document.body.classList.add('light-theme');
+      }
+    });
+
+    updateLabels();
+    updateInputCharCount();
+    updateOutputCharCount();
+</script>
+
+</body>
+</html>
