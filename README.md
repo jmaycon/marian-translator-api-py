@@ -2,19 +2,13 @@
 
 Simple REST API for German ↔ English translation using Hugging Face MarianMT models.
 
-UI will be available at http://localhost:8080/
-
 ---
-
-## 🐳 Option 1: Run with Docker Compose
-
-```shell
-docker-compose up
-```
 
 ## 🖥️ Option 2: Run Locally
 
 ### 1. On Linux
+
+UI will be available at http://localhost:30002/
 
 ```shell
 chmod +x run_local.sh
@@ -23,10 +17,20 @@ chmod +x run_local.sh
 
 ### 2. On Windows (PowerShell)
 
+Will be accessible at http://localhost:30003/
+
 ```shell
 ./run_local.ps1
 ```
 
+### 🐳 Option 1: Run with Docker
+
+UI will be available at http://localhost:30004/
+
+```shell
+docker build -t argos-translator-api-py .
+docker run --rm -p 30004:8080 argos-translator-api-py 
+```
 ---
 
 ## 🔁 API Usage

@@ -48,4 +48,4 @@ MarianTokenizer.from_pretrained('Helsinki-NLP/opus-mt-en-de')
 Write-Host "============================================================="
 Write-Host "Starting FastAPI server..."
 Write-Host "============================================================="
-uvicorn translate_api:app --host 0.0.0.0 --port 8081
+uvicorn translate_api:app --host 0.0.0.0 --port 30003

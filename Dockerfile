@@ -1,6 +1,6 @@
-FROM python:3.10-slim
+FROM python:3.13-slim
 
-# Install system dependencies required for sentencepiece
+# Install system dependencies required for Argos Translate
 RUN apt-get update && apt-get install -y \
     git \
     build-essential \
@@ -9,13 +9,16 @@ RUN apt-get update && apt-get install -y \
     protobuf-compiler \
  && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt /app/requirements.txt
 WORKDIR /app
 
-# Install Python dependencies
+COPY requirements.txt ./
+COPY static/ static/
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy your application code
-COPY translate_api.py /app/translate_api.py
+COPY translate_api.py ./
+COPY translation_models.py ./
+
+# Install Argos models during build
+RUN python -c "import translation_models; translation_models.install()"
 
 CMD ["uvicorn", "translate_api:app", "--host", "0.0.0.0", "--port", "8080"]
