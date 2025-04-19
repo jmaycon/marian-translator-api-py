@@ -95,7 +95,7 @@ def translate_sentences(sentences, tokenizer, model, device):
 def parallel_translate(text, tokenizer, model, device):
     sentences = split_into_sentences(text)
     logger.info(f"Will process {len(sentences)} sentence(s) in parallel.")
-    with ThreadPoolExecutor() as executor:
+    with ThreadPoolExecutor(max_workers=50) as executor:
         futures = []
         for i, sentence in enumerate(sentences):
             logger.info(f"Submitting translation task {i+1}/{len(sentences)}")
