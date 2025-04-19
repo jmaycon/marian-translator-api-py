@@ -28,8 +28,8 @@ UI: http://localhost:30003/
 UI: http://localhost:30004/
 
 ```shell
-docker build -t argos-translator-api-py .
-docker run --rm -p 30004:8080 argos-translator-api-py 
+docker build -t marian-translator-api-py .
+docker run --rm -p 30004:8080 marian-translator-api 
 ```
 ---
 
