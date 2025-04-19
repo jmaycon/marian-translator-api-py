@@ -34,17 +34,7 @@ pip install -r requirements.txt
 echo "============================================================="
 echo "Downloading MarianMT models..."
 echo "============================================================="
-python - <<EOF
-from transformers import MarianMTModel, MarianTokenizer
-
-print('Downloading de-en...')
-MarianMTModel.from_pretrained('Helsinki-NLP/opus-mt-de-en')
-MarianTokenizer.from_pretrained('Helsinki-NLP/opus-mt-de-en')
-
-print('Downloading en-de...')
-MarianMTModel.from_pretrained('Helsinki-NLP/opus-mt-en-de')
-MarianTokenizer.from_pretrained('Helsinki-NLP/opus-mt-en-de')
-EOF
+python -c "import translation_models; translation_models.install()"
 
 echo "============================================================="
 echo "Starting FastAPI server..."

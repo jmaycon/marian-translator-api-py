@@ -8,6 +8,10 @@ import traceback
 import logging
 from concurrent.futures import ThreadPoolExecutor
 import syntok.segmenter as segmenter  # Use syntok's correct segmenter module
+import translation_models
+
+# Install Models
+translation_models.install()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
