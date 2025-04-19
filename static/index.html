@@ -366,6 +366,12 @@
 
     $('#inputText').on('input', updateInputCharCount);
 
+    document.getElementById('inputText').addEventListener('paste', function (e) {
+      e.preventDefault();
+      const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+      document.execCommand('insertText', false, text);
+    });
+
     async function copyTextFrom(elementId) {
       try {
         const text = document.getElementById(elementId).innerText;
