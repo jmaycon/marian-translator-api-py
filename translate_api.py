@@ -54,6 +54,19 @@ if CUDA:
         },
     }
 
+# Warm-up translation engine
+logger.info("Warming up models...")
+for device_key in models:
+    for direction, config in models[device_key].items():
+        try:
+            input_text = "Hallo Welt" if direction == "de-en" else "Hello world"
+            inputs = config["tokenizer"](input_text, return_tensors="pt", padding=True, truncation=True).to(config["model"].device)
+            config["model"].generate(**inputs)
+            logger.info(f"Warm-up completed for {direction} on {device_key}")
+        except Exception as e:
+            logger.warning(f"Warm-up failed for {direction} on {device_key}: {e}")
+logger.info("Warm-up done.")
+
 # Input data model
 class TranslationRequest(BaseModel):
     text: str
