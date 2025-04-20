@@ -76,12 +76,13 @@ class TranslationRequest(BaseModel):
     text: str
     direction: str  # "de-en" or "en-de"
 
-# Sentence splitting using syntok.segmenter (modern and lightweight alternative to nltk)
+# Sentence splitting
 def split_into_sentences(text: str):
     sentences = []
     for paragraph in segmenter.process(text):
         for sentence in paragraph:
-            sentences.append(" ".join(token.value for token in sentence))
+            sentence_text = "".join(token.spacing + token.value for token in sentence)
+            sentences.append(sentence_text)
     return sentences
 
 # Translate a list of sentences using the provided tokenizer/model
