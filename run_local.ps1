@@ -38,4 +38,4 @@ python -c "import translation_models; translation_models.install()"
 Write-Host "============================================================="
 Write-Host "Starting FastAPI server..."
 Write-Host "============================================================="
-uvicorn translate_api:app --host 0.0.0.0 --port 30003
+uvicorn translate_api:app --host 0.0.0.0 --port 30012

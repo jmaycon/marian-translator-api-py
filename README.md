@@ -6,31 +6,32 @@ Simple REST API for German ↔ English translation using Hugging Face MarianMT m
 
 ## Run
 
+### Option 1: Run with Docker 🐳
+
+UI: http://localhost:30010/
+
+```shell
+docker build -t marian-translator-api-py .
+docker run --rm -p 30010:8080 marian-translator-api 
+```
+
 ### Option 2: On Linux
 
-UI: http://localhost:30002/
+UI: http://localhost:30011/
 
 ```shell
 chmod +x run_local.sh
 ./run_local.sh
 ```
 
-### Option 2: On Windows (PowerShell)
+### Option 3: On Windows (PowerShell)
 
-UI: http://localhost:30003/
+UI: http://localhost:30012/
 
 ```shell
 ./run_local.ps1
 ```
 
-### Option 3: Run with Docker 🐳
-
-UI: http://localhost:30004/
-
-```shell
-docker build -t marian-translator-api-py .
-docker run --rm -p 30004:8080 marian-translator-api 
-```
 ---
 
 ## 🔁 API Usage
@@ -45,8 +46,6 @@ _For powershell use `.\win-venv\Scripts\Activate.ps1`_
 
 ### POST `/translate-<cpu|gpu>`
 
-
-
 Translate text between German and English.
 
 `direction` options:
@@ -59,7 +58,7 @@ Translate text between German and English.
 1.German to English
 
 ```shell
-curl -X POST http://localhost:8081/translate-cpu \
+curl -X POST http://localhost:30010/translate-cpu \
       -H "Content-Type: application/json" \
       -d '{"text": "Guten Morgen", "direction": "de-en"}'
 ```
@@ -67,7 +66,7 @@ curl -X POST http://localhost:8081/translate-cpu \
 - 2.English to German
 
 ```shell
-curl -X POST http://localhost:8080/translate-cpu \
+curl -X POST http://localhost:30010/translate-cpu \
       -H "Content-Type: application/json" \
       -d '{"text": "Hi my friend", "direction": "en-de"}'
 ```
